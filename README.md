@@ -27,8 +27,11 @@ php artisan passport:client --personal
 <p>Install Composer</p>
 <p>Then Run</p>
 <pre>composer install</pre>
+<p>Or</p>
+<pre>composer install --ignore-platform-reqs</pre>
 <pre>cp .env.example .env</pre>
 <p>Then edit .env file to match your database setting</p>
+<p>After editing run:</p>
 <pre>php artisan key:generate</pre>
 <pre>php artisan migrate:fresh</pre>
 <pre>php artisan db:seed</pre>
