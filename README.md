@@ -27,7 +27,7 @@ php artisan passport:client --personal
 <p>Install Composer</p>
 <p>Then Run</p>
 <pre>composer install</pre>
-<pre>composer install cp .env.example .env</pre>
+<pre>cp .env.example .env</pre>
 <p>Then edit .env file to match your database setting</p>
 <pre>php artisan key:generate</pre>
 <pre>php artisan migrate:fresh</pre>
