@@ -33,6 +33,7 @@ php artisan passport:client --personal
 <p>Then edit .env file to match your database setting</p>
 <p>After editing run:</p>
 <pre>php artisan key:generate</pre>
+<pre>php artisan passport:keys</pre>
 <pre>php artisan migrate:fresh</pre>
 <pre>php artisan db:seed</pre>
 <pre>php artisan passport:client --personal</pre> 
