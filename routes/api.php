@@ -17,6 +17,7 @@ Route::post('/sendotp', [AuthController::class, 'sendOtp']);
 Route::post('/loginotp', [AuthController::class, 'loginWithPhoneOtp']);
 ///// token protect
 Route::middleware('auth:api')->group(function () {
+    Route::post('/token', [AuthController::class, 'checkToken']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/profile', [AuthController::class, 'getAuthenticatedUser']);
     Route::post('/updateprofile', [AuthController::class, 'updateProfile']);

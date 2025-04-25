@@ -144,4 +144,17 @@ class AuthController extends Controller
             'user'    => $user
         ]);
     }
+    public function checkToken(Request $request){
+        if (Auth::check()) {
+            return response()->json([
+                'valid'   => true,
+                'message' => 'Token is valid.'
+            ]);
+        }
+
+        return response()->json([
+            'valid'   => false,
+            'message' => 'Token is invalid or expired.'
+        ], 401);
+    }
 }
