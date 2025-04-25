@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Laravel\Passport\HasApiTokens;
 use Laravel\Passport\Token;
+use Illuminate\Support\Facades\Auth;
+
 
 use App\Models\User;
 use App\Models\Phone;
@@ -84,6 +86,62 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type'   => 'Bearer',
             'user'         => $user,
+        ]);
+    }
+    public function logout(Request $request){
+        $user = Auth::user();
+
+        if ($user) {
+            // Revoke the current access token
+            $request->user()->token()->revoke();
+
+            return response()->json([
+                'message' => 'Successfully logged out'
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'User not authenticated'
+        ], 401);
+    }
+    public function getAuthenticatedUser(Request $request){
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        // Load related phones
+        $user->load('phones');
+
+        return response()->json([
+            'user' => $user
+        ]);
+    }
+    public function updateProfile(Request $request){
+        $request->validate([
+            'first_name'     => 'required|string|max:255',
+            'last_name'      => 'required|string|max:255',
+            'national_code'  => ['required', 'string', 'regex:/^\d{10}$/'],
+            'email'          => 'nullable|email|max:255',
+        ]);
+
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        $user->update([
+            'first_name'    => $request->first_name,
+            'last_name'     => $request->last_name,
+            'national_code' => $request->national_code,
+            'email'         => $request->email,
+        ]);
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'user'    => $user
         ]);
     }
 }

@@ -15,8 +15,31 @@ use App\Http\Middleware\EnsureUserIsAdmin;
 
 Route::post('/sendotp', [AuthController::class, 'sendOtp']);
 Route::post('/loginotp', [AuthController::class, 'loginWithPhoneOtp']);
-Route::post('/listusers', [UserController::class, 'listUsers']);
+///// token protect
+Route::middleware('auth:api')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/profile', [AuthController::class, 'getAuthenticatedUser']);
+    Route::post('/updateprofile', [AuthController::class, 'updateProfile']);
+});
 
-// Route::middleware(['auth:api', EnsureUserIsAdmin::class])->group(function () {
-//     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index']);
+/// is admin middleware
+Route::middleware(['auth:api', EnsureUserIsAdmin::class])->group(function () {
+    Route::post('/listusers', [UserController::class, 'listUsers']);
+});
+/// complete profile route
+/// my profile route
+/// logout route
+/// address add route
+
+
+///// token protect
+// Route::middleware('auth:api')->group(function () {
+//     Route::post('/listusers', [UserController::class, 'listUsers']);
+// });
+
+///// token protect with route grouping
+// Route::middleware('auth:api')->prefix('user')->group(function () {
+//     Route::post('/getall', [UserController::class, 'listUsers']);
+//     Route::post('/get', [UserController::class, 'getSingleUser']);
+//     Route::post('/update', [UserController::class, 'updateUser']);
 // });
