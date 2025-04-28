@@ -10,6 +10,8 @@ class Phone extends Model
         'user_id',
         'number',
         'label',
+        'opt',
+        'expire_at'
     ];
     protected $hidden = [
         'user_id',
@@ -19,9 +21,5 @@ class Phone extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-    public function otps()
-    {
-        return $this->hasMany(Otp::class);
     }
 }

@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('phones', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->string('number');
+            $table->foreignId('user_id')->nullable()->references('id')->on('users')->onUpdate('cascade')->onDelete('set null');
+            $table->string('number')->unique();
             $table->string('label')->nullable();
+            $table->integer('opt')->nullable();
+            $table->timestamp('expire_at')->nullable();
             $table->timestamps();
         });
     }
