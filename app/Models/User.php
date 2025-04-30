@@ -8,32 +8,21 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes,HasRoles;
+    protected $guard_name = ['api'];
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'first_name',
         'last_name',
         'email',
         'password',
-        'national_code',
-        'is_admin',
-        'is_customer'
+        'national_code'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
@@ -42,20 +31,24 @@ class User extends Authenticatable
         'deleted_at',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_admin' => 'boolean',
-            'is_customer' => 'boolean',
+            'password' => 'hashed'
         ];
     }
+
+    public const STATUS_NEW = 'new';
+    public const STATUS_UNVERIFIED = 'unverified';
+    public const STATUS_VERIFIED = 'verified';
+    public const STATUS_BLOCK = 'block';
+    public static array $statuses = [
+        self::STATUS_NEW,
+        self::STATUS_VERIFIED,
+        self::STATUS_UNVERIFIED,
+        self::STATUS_BLOCK
+    ];
+
     public function phones()
     {
         return $this->hasMany(Phone::class);
