@@ -13,7 +13,7 @@ class UserController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'number' => 'required',
+            'phone' => 'required|string|regex:/^09\d{9}$/',
             'password' => 'required',
 
         ]);
@@ -21,7 +21,7 @@ class UserController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'code' => 403,
-                'message' => 'Invalid number or password'
+                'message' => $validator->errors()
             ], 403);
         }
 
@@ -33,8 +33,7 @@ class UserController extends Controller
                     'code' => 200,
                     'message' => 'Login Sucessfully',
                     'token' => $token
-                ]);
-
+                ],200);
             }
         }
 
@@ -48,36 +47,36 @@ class UserController extends Controller
 
     public function checkPermission(Request $request)
     {
-        return 'yes';
+        return 'you have permission';
     }
     /////////////////////////////////////////////////////////////////////////////
 
 
 
 
-    public function listUsers(Request $request){
-        // Validate input
-        $validated = $request->validate([
-            'offset' => 'integer|min:0',
-            'limit' => 'integer|min:1|max:100',
-        ]);
-
-        // Use validated input or fallback defaults
-        $offset = $validated['offset'] ?? 0;
-        $limit = $validated['limit'] ?? 15;
-
-        // Fetch users
-        $users = User::offset($offset)
-                    ->limit($limit)
-                    ->get();
-
-        $total = User::count();
-
-        return response()->json([
-            'data' => $users,
-            'offset' => $offset,
-            'limit' => $limit,
-            'total' => $total
-        ]);
-    }
+//    public function listUsers(Request $request){
+//        // Validate input
+//        $validated = $request->validate([
+//            'offset' => 'integer|min:0',
+//            'limit' => 'integer|min:1|max:100',
+//        ]);
+//
+//        // Use validated input or fallback defaults
+//        $offset = $validated['offset'] ?? 0;
+//        $limit = $validated['limit'] ?? 15;
+//
+//        // Fetch users
+//        $users = User::offset($offset)
+//                    ->limit($limit)
+//                    ->get();
+//
+//        $total = User::count();
+//
+//        return response()->json([
+//            'data' => $users,
+//            'offset' => $offset,
+//            'limit' => $limit,
+//            'total' => $total
+//        ]);
+//    }
 }

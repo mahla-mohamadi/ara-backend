@@ -10,7 +10,7 @@ class Phone extends Model
         'user_id',
         'number',
         'label',
-        'opt',
+        'otp',
         'expire_at'
     ];
     protected $hidden = [

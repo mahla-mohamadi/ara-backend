@@ -6,8 +6,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 
 
-//Route::post('/sendotp', [AuthController::class, 'sendOtp']);
-//Route::post('/loginotp', [AuthController::class, 'loginWithPhoneOtp']);
 /////// token protect
 //Route::middleware('auth:api')->group(function () {
 //    Route::post('/token', [AuthController::class, 'checkToken']);
@@ -39,5 +37,8 @@ use App\Http\Controllers\UserController;
 // });
 
 Route::post('/login', [UserController::class, 'login'])->name('login');
+Route::post('/getPhones', [AuthController::class, 'getPhones'])->name('getPhones');
+Route::post('/sendOtp', [AuthController::class, 'sendOtp'])->name('sendOtp');
+Route::post('/loginWithOtp', [AuthController::class, 'loginWithOtp'])->name('loginWithOtp');
 Route::post('/check', [UserController::class, 'check'])->name('check')->middleware('auth:api');
 Route::post('/checkPermission', [UserController::class, 'checkPermission'])->name('checkPermission')->middleware('auth:api','role:مدیریت');

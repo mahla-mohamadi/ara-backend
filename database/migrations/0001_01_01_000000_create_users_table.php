@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('first_name')->nullable();
             $table->string('last_name')->nullable();
             $table->string('email')->unique()->nullable();
-            $table->string('national_code')->nullable();
+            $table->string('national_code')->unique();
             $table->string('password')->nullable();
             $table->rememberToken();
             $table->softDeletes();

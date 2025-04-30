@@ -2,92 +2,140 @@
 
 namespace App\Http\Controllers;
 
+use App\Rules\IranNationalCodeRule;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Laravel\Passport\HasApiTokens;
-use Laravel\Passport\Token;
 use Illuminate\Support\Facades\Auth;
 
 
 use App\Models\User;
 use App\Models\Phone;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    public function sendOtp(Request $request){
-        $request->validate([
-            'phone_number' => ['required', 'string', 'regex:/^09\d{9}$/'],
+    public function getPhones(Request $request){
+        $validator = Validator::make($request->all(), [
+            'nationalCode' => ['required', 'integer','regex:/^\d{10}$/'],
         ]);
 
-        $phone = Phone::firstOrCreate(
-            ['number' => $request->phone_number],
-            ['user_id' => null] 
-        );
-
-        $existingOtp = $phone->otps()->latest()->first();
-
-        if ($existingOtp && $existingOtp->updated_at->diffInSeconds(now()) < 60) {
-            $secondsRemaining = 60 - $existingOtp->updated_at->diffInSeconds(now());
-        
+        if ($validator->fails()) {
             return response()->json([
-                'message' => 'You can only request a new OTP after 1 minute.',
-                'seconds_remaining' => (int) $secondsRemaining,
-            ], 400);
+                'code' => 403,
+                'message' => $validator->errors()
+            ], 403);
         }
-        
 
-        $phone->otps()->delete();
-
-        $otpCode = rand(100000, 999999);
-
-        $phone->otps()->create([
-            'otp_code'   => $otpCode,
-            'expires_at' => now()->addMinutes(2), 
-        ]);
-
-        return response()->json([
-            'message'   => 'OTP sent successfully',
-            'otp_debug' => $otpCode,
-        ]);
+        $user = User::query()->where('national_code',$request->nationalCode)->first();
+        if ($user) {
+            if ($user->phones->count()) {
+                return response()->json([
+                    'message'   => "user have phones",
+                    'code' => '200',
+                    'phones' => array_column($user->phones->toArray(),'number')
+                ],200);
+            } else {
+                return response()->json([
+                    'message'   => "user don't have phone",
+                    'code' => '403'
+                ],403);
+            }
+        } else {
+            return response()->json([
+                'message'   => 'user not found',
+                'code' => 404
+            ],404);
+        }
     }
-    public function loginWithPhoneOtp(Request $request){
-        $request->validate([
-            'phone_number' => ['required', 'string', 'regex:/^09\d{9}$/'],
-            'otp_code'     => ['required', 'string', 'min:6', 'max:6'],
+
+    public function sendOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'nationalCode' => ['required', 'integer','regex:/^\d{10}$/'],
+            'phone' => ['required', 'string','regex:/^09\d{9}$/']
         ]);
 
-        $phone = Phone::where('number', $request->phone_number)->first();
-
-        if (!$phone) {
-            return response()->json(['message' => 'Phone number not found'], 404);
+        if ($validator->fails()) {
+            return response()->json([
+                'code' => 403,
+                'message' => $validator->errors()
+            ], 403);
         }
 
-        $otp = $phone->otps()
-            ->where('otp_code', $request->otp_code)
-            ->where('expires_at', '>', now())
-            ->latest()
-            ->first();
-
-        if (!$otp) {
-            return response()->json(['message' => 'Invalid or expired OTP'], 401);
+        $user = User::query()->where('national_code',$request->nationalCode)->first();
+        if ($user) {
+            if ($user->phones->count()) {
+                $phone = Phone::query()->where('number',$request->phone)->where('user_id',$user->id)->first();
+                if ($phone) {
+                    $otp = mt_rand(100000,999999);
+                    $phone->otp = $otp;
+                    $phone->expire_at = Carbon::now()->addMinute(Config::get('added.optExpireTime'));
+                    $phone->save();
+                    return response()->json([
+                        'message'   => "otp send to your phone",
+                        'code' => '200',
+                        'otp' => $otp
+                    ],200);
+                } else {
+                    return response()->json([
+                        'message'   => "this phone does not belong to this user!",
+                        'code' => '403'
+                    ],403);
+                }
+            } else {
+                return response()->json([
+                    'message'   => "user don't have phone",
+                    'code' => '403'
+                ],403);
+            }
+        } else {
+            return response()->json([
+                'message'   => 'user not found',
+                'code' => 404
+            ],404);
         }
-
-        $user = $phone->user;
-        if (!$user) {
-            $user = User::create();
-            $phone->user_id = $user->id;
-            $phone->save();
-        }
-
-        $user->tokens()->delete();
-
-        $token = $user->createToken('Personal Access Token')->accessToken;
-
-        return response()->json([
-            'access_token' => $token,
-            'token_type'   => 'Bearer',
-            'user'         => $user,
-        ]);
     }
+
+    public function loginWithOtp(Request $request){
+        $validator = Validator::make($request->all(), [
+            'otp' => ['required', 'integer','regex:/^\d{6}$/'],
+            'phone' => ['required', 'string','regex:/^09\d{9}$/']
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'code' => 403,
+                'message' => $validator->errors()
+            ], 403);
+        }
+
+        $phone = Phone::where('number', $request->phone)->first();
+
+        if ($phone) {
+            if ($phone->otp == $request->otp && Carbon::create($phone->expire_at)->greaterThan(Carbon::now())) {
+                $token = $phone->user->createToken('ara')->accessToken;
+                return response()->json([
+                    'code' => 200,
+                    'message' => 'Login Sucessfully',
+                    'token' => $token
+                ],200);
+            } else {
+                return response()->json([
+                    'message'   => 'otp expired!',
+                    'code' => 403
+                ],403);
+            }
+        } else {
+            return response()->json([
+                'message'   => 'phone not found',
+                'code' => 404
+            ],404);
+        }
+    }
+
+
+
     public function logout(Request $request){
         $user = Auth::user();
 
